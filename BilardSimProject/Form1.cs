@@ -27,9 +27,10 @@ namespace BilardSimProject
         public Form1()
         {
             InitializeComponent();
-            NumOfBalls = 2;
+            NumOfBalls = 10;
             BallRadius = 20;
             BallMargin = 10;
+            BallMass = 10;
             BoardWidth = 300;
             BoardHeight = 550;
             _board = new Board(new Vector2((pictureBox1.Width - BoardWidth) / 2, (pictureBox1.Height - BoardHeight) / 2), BoardWidth, BoardHeight, NumOfBalls, BallRadius, BallMargin, BallMass);

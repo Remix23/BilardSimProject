@@ -27,18 +27,17 @@ namespace BilardSimProject
 
             List<Tuple<Ball, Ball>> colliding_balls = new List<Tuple<Ball, Ball>>();
 
-            foreach (Ball b1 in balls)
+            for (int i = 0; i < balls.Count; i++)
             {
-                foreach (Ball b2 in balls)
+                for (int j = i + 1; j < balls.Count; j++)
                 {
-                    if (b2 == b1) continue;
-                    if (_doBallsCollided(b1, b2)) colliding_balls.Add(Tuple.Create(b1, b2));
+                    if (_doBallsCollided(balls[i], balls[j])) colliding_balls.Add(Tuple.Create(balls[i], balls[j]));
                 }
             }
             return colliding_balls;
         }
 
-        public Tuple<Vector2, Vector2> GetVellocitiesAfterCollision(Ball b1, Ball b2)
+        public void UpdateBallAfterCollision(Ball b1, Ball b2)
         {
             float distance =  (float)(Math.Sqrt(Math.Pow(b2.Pos.X - b1.Pos.X, 2) + Math.Pow(b2.Pos.Y - b1.Pos.Y, 2)));
 
@@ -50,7 +49,7 @@ namespace BilardSimProject
             float tx = -ny;
             float ty = nx;
 
-            // dot product 
+            // dot product tangent
             float dpTan1 = b1.Vel.X * tx + b1.Vel.Y * ty;
             float dpTan2 = b2.Vel.X * ty + b2.Vel.Y * tx;
 
@@ -68,10 +67,8 @@ namespace BilardSimProject
             float b2_result_vx = tx * dpTan2 + nx * m2;
             float b2_result_vy = ty * dpTan2 + ny * m2;
 
-            Vector2 b1_after = new Vector2(b1_result_vx, b1_result_vy);
-            Vector2 b2_after = new Vector2(b2_result_vx, b2_result_vy);
-
-            return Tuple.Create(b1_after, b2_after);
+            b1.Vel = new Vector2(b1_result_vx, b1_result_vy);
+            b2.Vel = new Vector2(b2_result_vx, b2_result_vy);
         }
 
         public float SignedDistanceToBall (Vector2 b1_pos, Point point, int ball_radius)
@@ -84,13 +81,16 @@ namespace BilardSimProject
             return Math.Abs(Math.Pow(b2.Pos.X - b1.Pos.X, 2) + Math.Pow(b2.Pos.Y - b1.Pos.Y, 2)) <= Math.Pow(b1.Diameter / 2 + b2.Diameter / 2, 2);
         }
 
-        static Vector2 DistanceToPlane (Vector2 pos, int x1, int y1, int x2, int y2)
+        public void CollideWithBox (Ball b1, Vector2 board_offset, Vector2 board_dimensions)
         {
-            if (pos.X < x1 || pos.X > x2 || pos.Y < y1 || pos.Y > y2)
+            if (b1.Pos.X <= board_offset.X || b1.Pos.X >= board_offset.X + board_dimensions.X)
             {
-                return new Vector2(-1, -1);
+                b1.Vel.X *= -1;
             }
-            return new Vector2(Math.Abs(x1 - pos.X), Math.Abs(y1 - pos.Y));
+            if (b1.Pos.Y <= board_offset.Y || b1.Pos.Y >= board_offset.Y + board_dimensions.Y)
+            {
+                b1.Vel.Y *= -1;
+            }
         }
     }
 }

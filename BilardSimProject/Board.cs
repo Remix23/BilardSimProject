@@ -87,24 +87,23 @@ namespace BilardSimProject
             {
                 float force_x = _selectedBall.Pos.X - pos.X;
                 float force_y = _selectedBall.Pos.Y - pos.Y;
-                _selectedBall.ApplyForce(new Vector2(force_x * 0.1f, force_y * 0.1f));
+                _selectedBall.ApplyForce(new Vector2(force_x, force_y));
             }
             _selectedBall = null;
         }
 
         public void Update (float dtime)
         {
-            foreach (Ball ball in _balls)
-            {
-                ball.Update(dtime);
-            }
-            
             List<Tuple<Ball, Ball>> colliding_balls = _physics.GetCollidingBalls(_balls);
             foreach (Tuple<Ball, Ball> colliding_pair in colliding_balls) 
             {
-                Tuple<Vector2, Vector2> vells = _physics.GetVellocitiesAfterCollision(colliding_pair.Item1, colliding_pair.Item2);
-                colliding_pair.Item1.UpdateVell(vells.Item1);
-                colliding_pair.Item2.UpdateVell(vells.Item2);
+                _physics.UpdateBallAfterCollision(colliding_pair.Item1, colliding_pair.Item2);
+            }
+
+            foreach (Ball ball in _balls)
+            {
+                _physics.CollideWithBox(ball, _position, new Vector2(_boardWidth, _boardHeight));
+                ball.Update(dtime);
             }
         }
 
