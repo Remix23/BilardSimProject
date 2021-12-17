@@ -39,6 +39,11 @@ namespace BilardSimProject
             Acc += force / Mass;
         }
 
+        public void UpdateVell (Vector2 new_vell)
+        {
+            this.Vel = new_vell;
+        }
+
         public void Update (float dtime)
         {
             this.Vel += this.Acc * dtime;

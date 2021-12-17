@@ -27,7 +27,7 @@ namespace BilardSimProject
         public Form1()
         {
             InitializeComponent();
-            NumOfBalls = 9;
+            NumOfBalls = 2;
             BallRadius = 20;
             BallMargin = 10;
             BoardWidth = 300;
@@ -35,22 +35,26 @@ namespace BilardSimProject
             _board = new Board(new Vector2((pictureBox1.Width - BoardWidth) / 2, (pictureBox1.Height - BoardHeight) / 2), BoardWidth, BoardHeight, NumOfBalls, BallRadius, BallMargin, BallMass);
         }
 
-        private void Form1_Load(object sender, EventArgs e)
-        {
-
-        }
-
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
         {
             Graphics g = e.Graphics;
             _board.Draw(g);
-            
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            _board.Update(10f);
+            _board.Update(1);
             pictureBox1.Invalidate();
+        }
+
+        private void pictureBox1_MouseDown(object sender, MouseEventArgs e)
+        {
+            _board.SetActiveBall(e.Location);
+        }
+
+        private void pictureBox1_MouseUp(object sender, MouseEventArgs e)
+        {
+            _board.DiselectBall(e.Location);
         }
     }
 }

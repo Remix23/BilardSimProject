@@ -23,10 +23,12 @@ namespace BilardSimProject
         private float _baseY;
         private int _ballMass;
         private List<Ball> _balls;
+        private Ball? _selectedBall;
+        private Ball? _whiteBall;
 
         public Board (Vector2 pos, int boardWidth, int boardHeight, int numOfBalls, int ballRadius, int ballMargin, int ballMass)
         {
-            _physics = new PhysicsEngine ();
+            
             _balls = new List<Ball> ();
             _position = pos;
             _numOfBalls = numOfBalls;
@@ -37,6 +39,7 @@ namespace BilardSimProject
             _ballMass = ballMass;
             _halfnWidth = _boardWidth / 2 + _position.X;
             _baseY = _boardHeight / 5 + _position.Y;
+            _physics = new PhysicsEngine (_boardWidth, _boardHeight, _ballRadius);
 
             _genBalls();
         }
@@ -55,7 +58,7 @@ namespace BilardSimProject
                     Color color = Color.FromName(_balls.Count % 2 == 0 ? "White" : "Green"); 
                     SolidBrush brush = new SolidBrush(color);
                     Vector2 pos = new Vector2(x, y);
-                    Vector2 vel = new Vector2(0, -1);
+                    Vector2 vel = new Vector2(0, 0);
                     Vector2 acc = Vector2.Zero;
 
                     _balls.Add(new Ball(pos, vel, acc, _ballMass, _ballRadius, brush));
@@ -65,11 +68,43 @@ namespace BilardSimProject
             }
         }
 
+        public void SetActiveBall (Point pos)
+        {
+            _selectedBall = null;
+            foreach (Ball ball in _balls)
+            {
+                if (_physics.SignedDistanceToBall(ball.Pos, pos, Convert.ToInt32(ball.Diameter / 2)) < 0)
+                {
+                    _selectedBall = ball;
+                    break;
+                }
+            }
+        }
+
+        public void DiselectBall (Point pos)
+        {
+            if (_selectedBall != null)
+            {
+                float force_x = _selectedBall.Pos.X - pos.X;
+                float force_y = _selectedBall.Pos.Y - pos.Y;
+                _selectedBall.ApplyForce(new Vector2(force_x * 0.1f, force_y * 0.1f));
+            }
+            _selectedBall = null;
+        }
+
         public void Update (float dtime)
-        { 
+        {
             foreach (Ball ball in _balls)
             {
                 ball.Update(dtime);
+            }
+            
+            List<Tuple<Ball, Ball>> colliding_balls = _physics.GetCollidingBalls(_balls);
+            foreach (Tuple<Ball, Ball> colliding_pair in colliding_balls) 
+            {
+                Tuple<Vector2, Vector2> vells = _physics.GetVellocitiesAfterCollision(colliding_pair.Item1, colliding_pair.Item2);
+                colliding_pair.Item1.UpdateVell(vells.Item1);
+                colliding_pair.Item2.UpdateVell(vells.Item2);
             }
         }
 

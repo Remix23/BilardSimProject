@@ -22,35 +22,66 @@ namespace BilardSimProject
             _boardHeight = boardHeight;
         }
 
-        public List<KeyValuePair<Ball, Ball>> GetCollidingBalls (List<Ball> balls)
+        public List<Tuple<Ball, Ball>> GetCollidingBalls (List<Ball> balls)
         {
 
-            List<KeyValuePair<Ball, Ball>> colliding_balls = new List<KeyValuePair<Ball, Ball>>();
+            List<Tuple<Ball, Ball>> colliding_balls = new List<Tuple<Ball, Ball>>();
 
             foreach (Ball b1 in balls)
             {
                 foreach (Ball b2 in balls)
                 {
                     if (b2 == b1) continue;
-
-                    float d = _signedDistanceToBall(b1.Pos, b2.Pos, _ballRadius);
-                    if (d <= 0) colliding_balls.Add(new KeyValuePair<Ball, Ball>(b1, b2));
+                    if (_doBallsCollided(b1, b2)) colliding_balls.Add(Tuple.Create(b1, b2));
                 }
             }
             return colliding_balls;
         }
 
-        public Vector2 GetForceOfCollision(Ball ball, List<Ball> balls)
+        public Tuple<Vector2, Vector2> GetVellocitiesAfterCollision(Ball b1, Ball b2)
         {
-            Vector2 forces = Vector2.Zero;
+            float distance =  (float)(Math.Sqrt(Math.Pow(b2.Pos.X - b1.Pos.X, 2) + Math.Pow(b2.Pos.Y - b1.Pos.Y, 2)));
 
+            // normal 
+            float nx = (b2.Pos.X - b1.Pos.X) / distance;
+            float ny = (b2.Pos.Y - b1.Pos.Y) / distance;
 
-            return forces;
+            // tangent
+            float tx = -ny;
+            float ty = nx;
+
+            // dot product 
+            float dpTan1 = b1.Vel.X * tx + b1.Vel.Y * ty;
+            float dpTan2 = b2.Vel.X * ty + b2.Vel.Y * tx;
+
+            // dot product normal 
+            float dpNorm1 = b1.Vel.X * nx + b1.Vel.Y * ny;
+            float dpNorm2 = b2.Vel.X * nx + b2.Vel.Y * ny;
+
+            // conservation of momentum in 1D
+            float m1 = (dpNorm1 * (b1.Mass - b2.Mass) + 2 * b2.Mass * dpNorm2) / (b1.Mass + b2.Mass);
+            float m2 = (dpNorm2 * (b2.Mass - b1.Mass) + 2 * b1.Mass * dpNorm1) / (b2.Mass + b1.Mass);
+
+            // update ball velocities
+            float b1_result_vx = tx * dpTan1 + nx * m1;
+            float b1_result_vy = ty * dpTan1 + ny * m1;
+            float b2_result_vx = tx * dpTan2 + nx * m2;
+            float b2_result_vy = ty * dpTan2 + ny * m2;
+
+            Vector2 b1_after = new Vector2(b1_result_vx, b1_result_vy);
+            Vector2 b2_after = new Vector2(b2_result_vx, b2_result_vy);
+
+            return Tuple.Create(b1_after, b2_after);
         }
 
-        private float _signedDistanceToBall (Vector2 pos, Vector2 circlePos, int ballRsdius)
+        public float SignedDistanceToBall (Vector2 b1_pos, Point point, int ball_radius)
         {
-            return new Vector2(circlePos.X - pos.X, circlePos.Y - pos.Y).Length() - ballRsdius;
+            return new Vector2(b1_pos.X - point.X, b1_pos.Y - point.Y).Length() - ball_radius;
+        }
+
+        private bool _doBallsCollided (Ball b1, Ball b2)
+        {
+            return Math.Abs(Math.Pow(b2.Pos.X - b1.Pos.X, 2) + Math.Pow(b2.Pos.Y - b1.Pos.Y, 2)) <= Math.Pow(b1.Diameter / 2 + b2.Diameter / 2, 2);
         }
 
         static Vector2 DistanceToPlane (Vector2 pos, int x1, int y1, int x2, int y2)
